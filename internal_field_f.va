@@ -1,0 +1,43 @@
+// VerilogA for internal_field_f - LLG
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module internal_field_f(mx,hx);
+
+inout mx,hx;
+ground gnd;
+electrical mx,hx;
+
+parameter real alpha = 0.005; //damping constant of the material
+parameter real gamma = 17.32e10; // Gyro-magnetic ratio rad/(s.T)
+parameter real u0 =  1.25663706e-6; //Permitivity of free space
+parameter real Ms= 1.313e6 ;//A\m 
+parameter real e = 1.602176487e-19  ; //electron charge in coulombs
+parameter real thickness = 2n ; //z-axis
+parameter real length = 50n ;//x axis
+parameter real width = 50n ; //yaxis
+parameter real volume = 2n*50n*50n*3.14 ; //volume of Ferromagnet (free-layer)
+parameter real  pi = 3.14 ; // pi value
+parameter real h = 1.05e-34;// Reduced Plancks constant
+
+parameter real Kb = 1.38064825e-23; // Boltzmann constant
+
+parameter real Nx =0; // Demagnetization factor for the x-axis
+
+parameter real mean =0; // Mean for gaussian noise
+
+integer seed;
+
+real Hdemag,noise,Hk;
+
+analog begin
+ 	@(initial_step) begin
+seed =1;
+end
+	Hdemag = -Ms*Nx; // Demagnetizing field
+	noise = $rdist_normal(seed,mean,sqrt((2*alpha*Kb*300)/(u0*u0*abs(gamma)*volume*Ms*8p)));// Gaussian noise factor (0 for noiseless)
+	V(hx,gnd) <+ Hdemag*V(mx,gnd);
+	V(hx,gnd) <+ noise;
+end
+endmodule

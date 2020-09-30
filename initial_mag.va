@@ -1,0 +1,38 @@
+// VerilogA for normalizer-LLG
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module intial_mag(mxx,myy,mzz,mx,my,mz);
+
+electrical mxx,myy,mzz,mx,my,mz;
+inout mxx,myy,mzz,mx,my,mz;
+ground gnd;
+
+parameter real mx0 = -1;
+parameter real my0= 0;//-3m;
+parameter real mz0 = 0;//3m;
+
+real r,i=0,k=-5 ;
+
+analog begin
+
+if(i==1) begin
+r = sqrt(V(mxx,gnd)*V(mxx,gnd) + V(mzz,gnd)*V(mzz,gnd) + V(myy,gnd)*V(myy,gnd) );
+V(mx,gnd) <+ V(mxx,gnd)/r;
+V(my,gnd) <+ V(myy,gnd)/r;
+V(mz,gnd) <+ V(mzz,gnd)/r;
+k=k+1;
+end 
+
+if(i==0) begin
+r = sqrt(mx0*mx0 + my0*my0 + mz0*mz0);//  sqrt(V(inx)*V(inx) + V(iny)*V(iny) + V(inz)*V(inz) );
+V(mx,gnd) <+ mx0/r;
+V(my,gnd) <+ my0/r;
+V(mz,gnd) <+ mz0/r;
+i=i+1;
+end
+
+
+end
+endmodule

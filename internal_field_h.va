@@ -1,0 +1,46 @@
+// VerilogA for internal_field_h - LLG
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module internal_field_h(mz,hz);
+
+inout mz,hz;
+ground gnd;
+electrical mz,hz;
+
+
+parameter real alpha = 0.005 ;//damping constant 
+parameter real  gamma = 17.32e10;// Gyro-magnetic ratio rad/(s.T)
+parameter real u0 = 1.25663706e-6; //Permitivity of free space
+parameter real Ms= 1.313e6 ;//A\m 
+parameter real e = 1.602176487e-19 ; //Charge in coulombs
+parameter real thickness = 2n ; //z-axis
+parameter real length = 50n ;//x axis
+parameter real width = 50n ; //yaxis
+parameter real volume = 2n*50n*50n*3.14 ; // volume of FM
+parameter real  pi = 3.14 ;
+parameter real h = 1.05e-34;//  Reduced Plancks constant
+parameter real Kb = 1.38064825e-23;// Boltzmann equations
+
+
+parameter real Nz =1;//// Demagnetization factor for the z-axis
+
+parameter real Hk = 1.427883e6; // Anisotropy field in the z-direction
+
+parameter real mean =0;
+
+integer seed;
+
+real  Ns,Hdemag,Hanisotropy,noise;
+
+analog begin
+ 	@(initial_step) 
+	seed =1;
+	Hdemag = -Ms*Nz;
+	noise = $rdist_normal(seed,mean,sqrt((2*alpha*Kb*300)/(u0*u0*abs(gamma)*volume*Ms*8p)));// Gaussian noise factor (0 for noiseless)
+	V(hz,gnd) <+ (Hdemag+Hk)*V(mz,gnd);
+	V(hz,gnd) <+ Hext;
+	V(hz,gnd) <+ noise;	
+end
+endmodule

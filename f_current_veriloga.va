@@ -1,0 +1,77 @@
+// VerilogA for LLG, f_current_source, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module f_current_source(mxx,m1x,m1y,m1z,s1x,s1y,s1z,h1x,h1y,h1z,sotx,soty,sotz);
+
+input m1x,m1y,m1z,h1x,h1y,h1z,s1x,s1y,s1z,sotx,soty,sotz;
+output mxx;
+ground gnd;
+electrical m1x,m1y,m1z,h1x,h1y,h1z,s1x,s1y,s1z,mxx,sotx,soty,sotz;
+
+parameter real alpha = 0.005; //damping constant of the material
+parameter real  gamma = 17.32e10; // Gyro-magnetic ratio rad/(s.T)
+parameter real u0 = 1.25663706e-6; //Permitivity of free space
+parameter real Ms= 1.313e6 ;// in A\m 
+parameter real e = 1.602176487e-19 ; //electron charge in coulombs
+parameter real thickness = 2n ; //z-axis
+parameter real length = 50n ;//x axis
+parameter real width = 50n ; //yaxis
+parameter real volume = 2n*50n*50n*3.14 ; //volume of Ferromagnet (free-layer)
+parameter real  pi = 3.14 ; // pi value
+parameter real hbar = 1.0545716e-34; // Reduced Planck's constant
+
+// STT parameters
+parameter real P = 0.33; // Polarization of STT ( fixed layer)
+parameter real lambda = 0.38 ; // The angle dependent parameter of STT
+parameter real beta = -0.1; // Ratio of FieldLikeTorque to DampingLikeTorque in STT (zero for only DLT)
+
+// SHE AND RASHBA EFFECT PARAMETERS
+parameter real thetash = 0.15; // Spin - Hall angle of Ta
+parameter real area_fm = 3.14*50n*50n; // Area of the FM attached
+parameter real tshe = 4n; // Thickness of the SHE layer
+parameter real Wshe =200e-9; // Width of the SHE layer
+parameter real beta2 = 1 ; // Ratio of FieldLikeTorque to DampingLikeTorque in SOT (zero for only DLT)
+
+real X,sx,sy,sz,mx,my,mz,hx,hy,hz,p1,Ns,p2,sotx1,soty1,sotz1,p3,L0_dlt,L2_dlt,L0_flt,L2_flt,p4,p5;
+analog begin
+
+Ns = (2*Ms*volume)/(gamma*hbar);
+
+// STT currents (0 for only SOT)
+sx = V(s1x,gnd);
+sy = V(s1y,gnd);
+sz = V(s1z,gnd);
+
+// SOT currents (0 for only STT)
+sotx1 = V(sotx,gnd);
+soty1 = V(soty,gnd);
+sotz1 = V(sotz,gnd);
+
+// Magnetization projection in the x,y,z plane
+mx = V(m1x,gnd);
+mz = V(m1z,gnd);
+my = V(m1y,gnd);
+
+// Calculated effective fields
+hx = V(h1x,gnd);
+hz = V(h1z,gnd);
+hy = V(h1y,gnd);
+
+//STT coffecients of the LLG
+p1 = (P)/(1+lambda*mz);// STT coeffecient  for DLT
+p3 = (beta* (P))/(1+lambda*mz);// STT coefecient for FLT
+
+// SOT coeffeicents of the LLG
+p2 = (thetash*area_fm)/(tshe*Wshe);// SOT coeffecient for DLT
+p5 = beta2*p2;
+
+// Solution to the LLG equation for FLT and DLT included
+I(mxx,gnd) <+ ((p2*sotx1)*my*my + (p2*sotx1)*mz*mz - p1*sz*mx*mz + p1*sz*my*alpha + p3*sz*my + p3*sz*mx*mz*alpha);
+I(mxx,gnd) <+ (hz*my*Ns*e*gamma*u0 - hy*mz*Ns*e*gamma*u0 + hy*mx*my*Ns*e*alpha*gamma*u0 - hx*my*my*Ns*e*alpha*gamma*u0 + hz*mx*mz*Ns*e*alpha*gamma*u0 - hx*mz*mz*Ns*e*alpha*gamma*u0 );
+I(mxx,gnd) <+ -(alpha*my*my*( p5*sotx1) + alpha*mz*mz*(p5*sotx1)); 
+
+
+end 
+endmodule

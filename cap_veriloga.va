@@ -1,0 +1,33 @@
+// VerilogA code for capacitor - LLG
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module cap(p,n,mx);
+
+inout p,n,mx;
+ground gnd;
+electrical p,n,mx;
+
+
+parameter real alpha = 0.005; //damping constant of the material 
+parameter real gamma = 17.32e10;//Gyro-magnetic ratio rad/(s.T)
+parameter real Ms= 1.313e6 ;// in A\m 
+parameter real e = 1.602176487e-19 ; //electron charge in coloumbs
+parameter real thickness = 2n ; //z-axis
+parameter real length = 50n ;//x axis
+parameter real width = 50n ; //yaxis
+parameter real volume = 2n*50n*50n*3.14 ; //volume of Ferromagnet (free-layer)
+parameter real  pi = 3.14 ; // pi value
+parameter real hbar = 1.0545716e-34; // Reduced Planck's constant
+
+
+real C , cc ,Ns ;
+
+analog begin 
+Ns = (2*Ms*volume)/(gamma*hbar); 
+C = Ns*e*(1+alpha*alpha);
+cc = (1/C)*(I(p,n));
+V(p,n) <+ idt(cc, V(mx,gnd));
+end
+endmodule
